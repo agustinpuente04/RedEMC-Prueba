@@ -1,7 +1,7 @@
 $(function () {
     'use strict';
 
-    // 1. Configuración y estado
+    // Configuración y estado
     const API_PERSONAS = '/api/personas';
     const DURACION_ALERTA = 5000;
     const REGEX_NOMBRE = /^[\p{L} ]+$/u;
@@ -31,7 +31,7 @@ $(function () {
         telefono: { $input: $('#telefono'), $error: $('#error-telefono') }
     };
 
-    // 2. Eventos e inicio
+    // Eventos
     $formulario.on('submit', manejarEnvio);
 
     for (const campo of Object.values(campos)) {
@@ -77,7 +77,7 @@ $(function () {
 
     cargarPersonas(1);
 
-    // 3. Formulario y guardado (AJAX)
+    // Formulario
     function manejarEnvio(evento) {
         evento.preventDefault();
         if (estado.enviando) return;
@@ -101,6 +101,7 @@ $(function () {
         guardarPersona(datos);
     }
 
+    // Valida nombre, email y teléfono opcional con las mismas regex del backend.
     function validarDatos(datos) {
         const errores = {};
         const nombre = datos.nombre.trim();
@@ -125,6 +126,7 @@ $(function () {
         return errores;
     }
 
+    // Envía la persona por AJAX y recarga la página 1 destacando el nuevo registro.
     function guardarPersona(datos) {
         alternarBotonGuardando(true);
 
@@ -185,7 +187,8 @@ $(function () {
         $cargandoBoton.toggleClass('d-none', !cargando);
     }
 
-    // 4. Listado y paginación (AJAX)
+    // Listado y paginación
+    // Trae la página indicada por AJAX y actualiza listado y controles.
     function cargarPersonas(pagina = 1, idDestacado = null) {
         ocultarAlerta($alertaListado);
 
@@ -299,6 +302,7 @@ $(function () {
         `);
     }
 
+    // Calcula los botones visibles con puntos suspensivos cuando hay más de 5 páginas.
     function calcularPaginasVisibles(actual, total) {
         if (total <= 5) {
             return Array.from({ length: total }, (_, i) => i + 1);
@@ -319,6 +323,7 @@ $(function () {
         return paginas;
     }
 
+    // Acota el número ingresado entre 1 y la última página antes de navegar.
     function irAPaginaIngresada($input) {
         const texto = String($input.val() || '').trim();
         if (!/^-?\d+$/.test(texto)) {
@@ -335,7 +340,8 @@ $(function () {
         }
     }
 
-    // 5. Alertas y utilidades
+    // Alertas y utilidades
+    // Muestra la alerta con botón de cierre y temporizador de 5 segundos.
     function mostrarAlerta($alerta, mensaje, tipo) {
         ocultarAlerta($alerta);
 
@@ -359,6 +365,7 @@ $(function () {
         $alerta.removeData('timer').addClass('d-none').removeClass('es-exito es-error').empty();
     }
 
+    // Formatea YYYY-MM-DD HH:mm:ss a DD/MM/YYYY HH:mm sin depender de Date().
     function formatearFecha(fechaTexto) {
         if (!fechaTexto) return '';
 
@@ -369,6 +376,7 @@ $(function () {
         return dia && mes && anio ? `${dia}/${mes}/${anio}${hora ? ' ' + hora : ''}` : String(fechaTexto);
     }
 
+    // Escapa caracteres HTML antes de insertar datos en el DOM.
     function escaparHtml(texto) {
         return String(texto)
             .replace(/&/g, '&amp;')

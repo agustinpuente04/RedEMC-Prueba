@@ -6,17 +6,12 @@ namespace App;
 
 use PDO;
 
-/**
- * Maneja la carga del archivo .env y la conexión PDO a MySQL.
- */
 class Database
 {
     private static ?PDO $conexion = null;
     private static bool $envCargado = false;
 
-    /**
-     * Carga las variables del archivo .env si existe, sin pisar variables del entorno.
-     */
+    // Carga variables desde .env sin pisar las del entorno (Docker / Railway).
     public static function cargarEnv(): void
     {
         if (self::$envCargado) {
@@ -66,9 +61,7 @@ class Database
         }
     }
 
-    /**
-     * Obtiene una variable de entorno o devuelve el valor por defecto si no existe.
-     */
+    // Lee una variable de entorno (o devuelve el valor por defecto si no existe).
     public static function obtenerVariable(string $nombre, ?string $defecto = null): ?string
     {
         self::cargarEnv();
@@ -85,9 +78,7 @@ class Database
         return $defecto;
     }
 
-    /**
-     * Devuelve la conexión PDO compartida contra MySQL.
-     */
+    // Abre o reutiliza la conexión PDO contra MySQL.
     public static function obtenerConexion(): PDO
     {
         if (self::$conexion instanceof PDO) {

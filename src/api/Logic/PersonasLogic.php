@@ -8,9 +8,6 @@ use App\Database;
 use App\Repositories\PersonasRepository;
 use PDOException;
 
-/**
- * Capa de lógica de negocio y validaciones para personas.
- */
 class PersonasLogic
 {
     private const REGEX_NOMBRE = '/^[\p{L} ]+$/u';
@@ -24,9 +21,7 @@ class PersonasLogic
         $this->repositorio = $repositorio;
     }
 
-    /**
-     * Obtiene el límite de registros por página configurado en .env (8 por defecto).
-     */
+    // Toma la cantidad de registros por página desde .env (8 por defecto).
     public function obtenerLimitePorDefecto(): int
     {
         $valor = Database::obtenerVariable('LIMITE_POR_PAGINA', '8');
@@ -37,11 +32,7 @@ class PersonasLogic
         return 8;
     }
 
-    /**
-     * Lista las personas paginadas de la más reciente a la más antigua.
-     *
-     * @return array<string, mixed>
-     */
+    // Devuelve la página pedida acotada al rango válido y los datos de paginación.
     public function listarPersonas(int $pagina = 1, ?int $limite = null): array
     {
         $limiteFinal = ($limite !== null && $limite > 0) ? $limite : $this->obtenerLimitePorDefecto();
@@ -70,12 +61,7 @@ class PersonasLogic
         ];
     }
 
-    /**
-     * Valida los datos recibidos, comprueba duplicados y registra una nueva persona.
-     *
-     * @param array<string, mixed> $entrada
-     * @return array<string, mixed>
-     */
+    // Valida formato y unicidad de los datos antes de guardar en base.
     public function crearPersona(array $entrada): array
     {
         $errores = [];
@@ -128,9 +114,7 @@ class PersonasLogic
         ];
     }
 
-    /**
-     * @param array<string, string> $errores
-     */
+    // Obligatorio, solo letras (con tildes y ñ) y espacios simples.
     private function validarNombre(mixed $valorCrudo, array &$errores): ?string
     {
         $nombreLimpio = is_string($valorCrudo) ? trim($valorCrudo) : '';
@@ -148,9 +132,7 @@ class PersonasLogic
         return $normalizado ?? $nombreLimpio;
     }
 
-    /**
-     * @param array<string, string> $errores
-     */
+    // Obligatorio, formato válido y normalizado a minúsculas.
     private function validarEmail(mixed $valorCrudo, array &$errores): ?string
     {
         $emailLimpio = is_string($valorCrudo) ? trim($valorCrudo) : '';
@@ -167,9 +149,7 @@ class PersonasLogic
         return mb_strtolower($emailLimpio, 'UTF-8');
     }
 
-    /**
-     * @param array<string, string> $errores
-     */
+    // Opcional; si se envía, debe ser celular uruguayo de 9 dígitos (09xxxxxxx).
     private function validarTelefono(mixed $valorCrudo, array &$errores): ?string
     {
         if ($valorCrudo === null || $valorCrudo === '') {
@@ -184,11 +164,7 @@ class PersonasLogic
         return $valorCrudo;
     }
 
-    /**
-     * Maneja violaciones de unicidad por inserciones simultáneas sin exponer detalles SQL.
-     *
-     * @return array<string, mixed>
-     */
+    // Maneja duplicados por inserciones simultáneas sin exponer errores SQL.
     private function resolverConflictoConcurrente(string $email, ?string $telefono): array
     {
         $erroresDuplicados = [];

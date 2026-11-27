@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace App\Domain;
 
-/**
- * Entidad de dominio que representa una persona registrada.
- */
 class Persona
 {
     private int $id;
@@ -54,11 +51,7 @@ class Persona
         return $this->fechaCreacion;
     }
 
-    /**
-     * Crea una Persona a partir de una fila obtenida de la base de datos.
-     *
-     * @param array<string, mixed> $fila
-     */
+    // Construye una Persona desde una fila devuelta por MySQL.
     public static function crearDesdeFila(array $fila): self
     {
         $telefono = null;
@@ -75,11 +68,7 @@ class Persona
         );
     }
 
-    /**
-     * Convierte la Persona en un arreglo asociativo para responder en JSON.
-     *
-     * @return array{id: int, nombre: string, email: string, telefono: string|null, fecha_creacion: string}
-     */
+    // Serializa la entidad para devolverla en respuestas JSON.
     public function convertirAArray(): array
     {
         return [

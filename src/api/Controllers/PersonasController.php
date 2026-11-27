@@ -6,9 +6,6 @@ namespace App\Controllers;
 
 use App\Logic\PersonasLogic;
 
-/**
- * Controlador HTTP para el recurso `/personas`.
- */
 class PersonasController
 {
     private PersonasLogic $logica;
@@ -18,9 +15,7 @@ class PersonasController
         $this->logica = $logica;
     }
 
-    /**
-     * GET /personas: devuelve el listado paginado de personas.
-     */
+    // GET /personas
     public function listar(): void
     {
         $paginaParam = $_GET['pagina'] ?? 1;
@@ -35,9 +30,7 @@ class PersonasController
         self::responderJson($resultado, $codigo);
     }
 
-    /**
-     * POST /personas: valida y registra una nueva persona desde JSON o POST tradicional.
-     */
+    // POST /personas (acepta JSON o formulario clásico)
     public function crear(): void
     {
         $cuerpoCrudo = file_get_contents('php://input');
@@ -63,11 +56,7 @@ class PersonasController
         self::responderJson($resultado, $codigo);
     }
 
-    /**
-     * Emite la respuesta JSON con el código HTTP indicado.
-     *
-     * @param array<string, mixed> $cuerpo
-     */
+    // Envía la respuesta JSON con su código HTTP sin exponer la clave interna 'codigo'.
     public static function responderJson(array $cuerpo, int $codigoHttp = 200): void
     {
         if (array_key_exists('codigo', $cuerpo) && is_int($cuerpo['codigo'])) {
