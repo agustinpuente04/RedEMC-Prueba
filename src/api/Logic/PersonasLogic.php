@@ -44,12 +44,12 @@ class PersonasLogic
      */
     public function listarPersonas(int $pagina = 1, ?int $limite = null): array
     {
-        $pagina = max(1, $pagina);
         $limiteFinal = ($limite !== null && $limite > 0) ? $limite : $this->obtenerLimitePorDefecto();
-        $desplazamiento = ($pagina - 1) * $limiteFinal;
-
         $total = $this->repositorio->contarTotal();
         $totalPaginas = $total > 0 ? (int) ceil($total / $limiteFinal) : 1;
+
+        $pagina = max(1, min($pagina, $totalPaginas));
+        $desplazamiento = ($pagina - 1) * $limiteFinal;
         $personas = $this->repositorio->obtenerPaginadas($limiteFinal, $desplazamiento);
 
         $datos = [];
@@ -133,19 +133,14 @@ class PersonasLogic
      */
     private function validarNombre(mixed $valorCrudo, array &$errores): ?string
     {
-        if (!is_string($valorCrudo)) {
-            $errores['nombre'] = 'El nombre es obligatorio.';
-            return null;
-        }
-
-        $nombreLimpio = trim($valorCrudo);
+        $nombreLimpio = is_string($valorCrudo) ? trim($valorCrudo) : '';
         if ($nombreLimpio === '') {
-            $errores['nombre'] = 'El nombre es obligatorio y no puede contener solo espacios.';
+            $errores['nombre'] = 'El nombre es obligatorio y no puede ser vacío.';
             return null;
         }
 
         if (preg_match(self::REGEX_NOMBRE, $nombreLimpio) !== 1) {
-            $errores['nombre'] = 'El nombre solo puede contener letras y espacios (se permiten tildes y ñ).';
+            $errores['nombre'] = 'El nombre solo puede contener letras y espacios.';
             return null;
         }
 
@@ -158,12 +153,7 @@ class PersonasLogic
      */
     private function validarEmail(mixed $valorCrudo, array &$errores): ?string
     {
-        if (!is_string($valorCrudo)) {
-            $errores['email'] = 'El email es obligatorio.';
-            return null;
-        }
-
-        $emailLimpio = trim($valorCrudo);
+        $emailLimpio = is_string($valorCrudo) ? trim($valorCrudo) : '';
         if ($emailLimpio === '') {
             $errores['email'] = 'El email es obligatorio.';
             return null;
