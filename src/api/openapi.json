@@ -1,0 +1,222 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "API RedEMC - Prueba de desarrollo",
+    "version": "1.0.0",
+    "description": "Documentación interactiva de los endpoints para el registro y listado paginado de personas."
+  },
+  "servers": [
+    {
+      "url": "/api",
+      "description": "Servidor actual"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["Sistema"],
+        "summary": "Verificar el estado de la API.",
+        "responses": {
+          "200": {
+            "description": "API operativa",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "exito": { "type": "boolean", "example": true },
+                    "mensaje": { "type": "string", "example": "API operativa" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/personas": {
+      "get": {
+        "tags": ["Personas"],
+        "summary": "Listar personas con paginación.",
+        "description": "Devuelve las personas registradas ordenadas de la más reciente a la más antigua.",
+        "parameters": [
+          {
+            "name": "pagina",
+            "in": "query",
+            "required": false,
+            "description": "Número de página a consultar.",
+            "schema": { "type": "integer", "minimum": 1, "default": 1 }
+          },
+          {
+            "name": "limite",
+            "in": "query",
+            "required": false,
+            "description": "Cantidad de registros por página.",
+            "schema": { "type": "integer", "minimum": 1, "default": 8 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Listado paginado de personas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "exito": { "type": "boolean", "example": true },
+                    "datos": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Persona" }
+                    },
+                    "paginacion": { "$ref": "#/components/schemas/Paginacion" }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RespuestaError" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Personas"],
+        "summary": "Registrar una nueva persona,",
+        "description": "Valida nombre, email y teléfono opcional, verifica duplicados y guarda el registro en MySQL.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/NuevaPersona" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Persona registrada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "exito": { "type": "boolean", "example": true },
+                    "mensaje": { "type": "string", "example": "Persona registrada correctamente." },
+                    "dato": { "$ref": "#/components/schemas/Persona" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "JSON malformado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RespuestaError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Email o teléfono duplicado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RespuestaError" },
+                "example": {
+                  "exito": false,
+                  "mensaje": "El email ingresado ya se encuentra registrado.",
+                  "errores": {
+                    "email": "El email ingresado ya se encuentra registrado."
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error de validación en campos obligatorios o formato",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RespuestaError" },
+                "example": {
+                  "exito": false,
+                  "mensaje": "El teléfono debe tener exactamente 9 dígitos numéricos comenzando con 09, sin espacios, guiones ni +598 (ej.: 097680102).",
+                  "errores": {
+                    "telefono": "El teléfono debe tener exactamente 9 dígitos numéricos comenzando con 09, sin espacios, guiones ni +598 (ej.: 097680102)."
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RespuestaError" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Persona": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "nombre": { "type": "string", "example": "María José Peña" },
+          "email": { "type": "string", "format": "email", "example": "maria.pena@ejemplo.com" },
+          "telefono": { "type": "string", "nullable": true, "example": "097680102" },
+          "fecha_creacion": { "type": "string", "example": "2026-11-26 20:50:00" }
+        }
+      },
+      "NuevaPersona": {
+        "type": "object",
+        "required": ["nombre", "email"],
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "description": "Obligatorio. Solo letras (incluye tildes y ñ) y espacios.",
+            "example": "María José Peña"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Obligatorio y único (sin distinguir mayúsculas de minúsculas).",
+            "example": "maria.pena@ejemplo.com"
+          },
+          "telefono": {
+            "type": "string",
+            "nullable": true,
+            "description": "Opcional. Celular uruguayo de 9 dígitos comenzando por 09, sin espacios, guiones ni +598.",
+            "example": "097680102"
+          }
+        }
+      },
+      "Paginacion": {
+        "type": "object",
+        "properties": {
+          "pagina": { "type": "integer", "example": 1 },
+          "limite": { "type": "integer", "example": 8 },
+          "total": { "type": "integer", "example": 1 },
+          "total_paginas": { "type": "integer", "example": 1 }
+        }
+      },
+      "RespuestaError": {
+        "type": "object",
+        "properties": {
+          "exito": { "type": "boolean", "example": false },
+          "mensaje": { "type": "string" },
+          "errores": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}
