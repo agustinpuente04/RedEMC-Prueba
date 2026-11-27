@@ -25,13 +25,18 @@ spl_autoload_register(static function (string $clase): void {
 
 Database::cargarEnv();
 
-$origenCors = Database::obtenerVariable('CORS_ORIGIN', '*') ?? '*';
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: DENY');
-header('Access-Control-Allow-Origin: ' . $origenCors);
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Accept, X-Requested-With');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+
+$origenCors = trim(Database::obtenerVariable('CORS_ORIGIN', '') ?? '');
+if ($origenCors !== '') {
+    header('Access-Control-Allow-Origin: ' . $origenCors);
+    header('Vary: Origin');
+    header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type, Accept, X-Requested-With');
+}
 
 $metodo = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
 if ($metodo === 'OPTIONS') {
@@ -39,9 +44,7 @@ if ($metodo === 'OPTIONS') {
     exit;
 }
 
-/**
- * Obtiene la ruta normalizada sin depender de cómo esté montado el servidor web.
- */
+// Normaliza la ruta sin importar si entra por /api, /src/api o index.php.
 $obtenerRuta = static function (): string {
     if (isset($_GET['ruta']) && is_string($_GET['ruta']) && trim($_GET['ruta']) !== '') {
         return '/' . trim($_GET['ruta'], '/');
@@ -76,6 +79,7 @@ $obtenerRuta = static function (): string {
 
 try {
     $ruta = $obtenerRuta();
+    $swaggerHabilitado = strtolower(Database::obtenerVariable('HABILITAR_SWAGGER', 'false') ?? 'false') === 'true';
 
     if ($ruta === '/health') {
         if ($metodo !== 'GET') {
@@ -94,7 +98,7 @@ try {
         exit;
     }
 
-    if ($ruta === '/swagger') {
+    if ($swaggerHabilitado && $ruta === '/swagger') {
         if ($metodo !== 'GET') {
             header('Allow: GET, OPTIONS');
             PersonasController::responderJson([
@@ -109,7 +113,7 @@ try {
         exit;
     }
 
-    if ($ruta === '/openapi.json') {
+    if ($swaggerHabilitado && $ruta === '/openapi.json') {
         if ($metodo !== 'GET') {
             header('Allow: GET, OPTIONS');
             PersonasController::responderJson([
