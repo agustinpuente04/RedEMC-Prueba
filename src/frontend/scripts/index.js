@@ -365,15 +365,27 @@ $(function () {
         $alerta.removeData('timer').addClass('d-none').removeClass('es-exito es-error').empty();
     }
 
-    // Formatea YYYY-MM-DD HH:mm:ss a DD/MM/YYYY HH:mm sin depender de Date().
+    // Convierte la fecha UTC de MySQL (YYYY-MM-DD HH:mm:ss) a hora local DD/MM/YYYY HH:mm.
     function formatearFecha(fechaTexto) {
         if (!fechaTexto) return '';
 
-        const [fechaParte = '', horaParte = ''] = String(fechaTexto).trim().split(' ');
-        const [anio, mes, dia] = fechaParte.split('-');
-        const hora = horaParte.slice(0, 5);
+        const texto = String(fechaTexto).trim();
+        const isoUtc = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(texto)
+            ? texto.replace(' ', 'T') + 'Z'
+            : texto;
 
-        return dia && mes && anio ? `${dia}/${mes}/${anio}${hora ? ' ' + hora : ''}` : String(fechaTexto);
+        const fecha = new Date(isoUtc);
+        if (Number.isNaN(fecha.getTime())) {
+            return texto;
+        }
+
+        const dia = String(fecha.getDate()).padStart(2, '0');
+        const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+        const anio = fecha.getFullYear();
+        const hora = String(fecha.getHours()).padStart(2, '0');
+        const minutos = String(fecha.getMinutes()).padStart(2, '0');
+
+        return `${dia}/${mes}/${anio} ${hora}:${minutos}`;
     }
 
     // Escapa caracteres HTML antes de insertar datos en el DOM.
